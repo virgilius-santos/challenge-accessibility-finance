@@ -1,97 +1,92 @@
-//
-//  TransfersView.swift
-//  FinanceApp
-//
-//  Created by Rodrigo Borges on 30/12/21.
-//
-
-import Foundation
 import UIKit
 
 protocol TransferViewDelegate: AnyObject {
-
     func didPressChooseContactButton()
     func didPressTransferButton(with amount: String)
 }
 
-class TransfersView: UIView {
-
+final class TransfersView: UIView {
     weak var delegate: TransferViewDelegate?
 
-    let stackView: UIStackView = {
-
+    let stackView: UIView = {
         let stackView = UIStackView()
         stackView.translatesAutoresizingMaskIntoConstraints = false
-        stackView.axis = .vertical
-        stackView.spacing = 8
-
         return stackView
     }()
 
     let amountTextField: UITextField = {
-
         let textField = UITextField()
+        textField.translatesAutoresizingMaskIntoConstraints = false
         textField.placeholder = "$0"
-        textField.font = UIFont.boldSystemFont(ofSize: 34)
+        textField.accessibilityLabel = "Input value"
+        textField.font = .preferredFont(forTextStyle: .title1)
+        textField.adjustsFontForContentSizeCategory = true
         textField.textAlignment = .center
         textField.keyboardType = .numberPad
         return textField
     }()
 
-    lazy var chooseContactButton: UIButton = {
-
-        let button = UIButton()
+    lazy var chooseContactButton: CustomButton = {
+        let button = CustomButton()
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("Choose contact", for: .normal)
-        button.setTitleColor(.systemBlue, for: .normal)
-        button.addTarget(self, action: #selector(chooseContact), for: .touchUpInside)
+        button.text = "Choose contact"
+        button.textColor = .systemBlue
+        button.textStyle = .callout
+        button.tap = { [weak self] in
+            self?.delegate?.didPressChooseContactButton()
+        }
         return button
     }()
 
-    lazy var transferButton: UIButton = {
-
-        let button = UIButton()
+    lazy var transferButton: CustomButton = {
+        let button = CustomButton()
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("Transfer", for: .normal)
-        button.setTitleColor(.white, for: .normal)
+        button.text = "Transfer"
+        button.textColor = .white
+        button.textStyle = .callout
         button.backgroundColor = .systemBlue
-        button.layer.cornerRadius = 14
-        button.addTarget(self, action: #selector(transfer), for: .touchUpInside)
+        button.tap = { [weak self] in
+            self?.delegate?.didPressTransferButton(with: self?.amountTextField.text ?? "0")
+        }
         return button
     }()
 
-    init() {
-        super.init(frame: .zero)
+    override init(frame: CGRect) {
+        super.init(frame: frame)
 
-        backgroundColor = .white
-
-        stackView.addArrangedSubview(amountTextField)
-        stackView.addArrangedSubview(chooseContactButton)
-
+        backgroundColor = .systemBackground
+        setupSubviews()
+        setupConstraints()
+    }
+    
+    private func setupSubviews() {
+        stackView.addSubview(amountTextField)
+        stackView.addSubview(chooseContactButton)
         addSubview(stackView)
         addSubview(transferButton)
-
+    }
+    
+    private func setupConstraints() {
         NSLayoutConstraint.activate([
             stackView.centerXAnchor.constraint(equalTo: safeAreaLayoutGuide.centerXAnchor),
             stackView.centerYAnchor.constraint(equalTo: safeAreaLayoutGuide.centerYAnchor),
-
-            transferButton.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            stackView.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor, constant: 16),
+            trailingAnchor.constraint(greaterThanOrEqualTo: stackView.trailingAnchor, constant: 16),
+            
+            amountTextField.topAnchor.constraint(equalTo: stackView.topAnchor),
+            chooseContactButton.topAnchor.constraint(equalTo: amountTextField.bottomAnchor, constant: 8),
+            amountTextField.leadingAnchor.constraint(equalTo: stackView.leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: amountTextField.trailingAnchor),
+            
+            stackView.bottomAnchor.constraint(equalTo: chooseContactButton.bottomAnchor),
+            chooseContactButton.leadingAnchor.constraint(equalTo: stackView.leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: chooseContactButton.trailingAnchor),
+            
+            safeAreaLayoutGuide.bottomAnchor.constraint(equalTo: transferButton.bottomAnchor, constant: 16),
             transferButton.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor, constant: 16),
-            transferButton.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            transferButton.heightAnchor.constraint(equalToConstant: 56)
+            safeAreaLayoutGuide.trailingAnchor.constraint(equalTo: transferButton.trailingAnchor, constant: 16),
+            transferButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 56)
         ])
-    }
-
-    @objc
-    func chooseContact() {
-
-        delegate?.didPressChooseContactButton()
-    }
-
-    @objc
-    func transfer() {
-
-        delegate?.didPressTransferButton(with: amountTextField.text ?? "0")
     }
 
     required init?(coder: NSCoder) {
